@@ -1,0 +1,106 @@
+<!-- Header + Add Button -->
+<div class="flex items-center justify-between mb-4">
+    <div></div>
+    <a href="{% url 'condition_create' %}" class="btn-primary">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+        </svg>
+        Add Condition
+    </a>
+</div>
+
+<!-- Filter Bar -->
+<div class="card px-5 py-4 mb-4">
+    <form hx-boost="false"
+          hx-get="{% url 'health_dashboard' %}"
+          hx-target="#health-table-area"
+          hx-swap="innerHTML"
+          hx-push-url="true"
+          class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <input type="hidden" name="type" value="conditions">
+        <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Horse</label>
+            <select name="horse" class="form-select">
+                <option value="">All horses</option>
+                {% for h in horses %}
+                <option value="{{ h.pk }}" {% if request.GET.horse == h.pk|stringformat:"s" %}selected{% endif %}>{{ h.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Status</label>
+            <select name="status" class="form-select">
+                <option value="">All</option>
+                <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                <option value="resolved" {% if request.GET.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                <option value="monitoring" {% if request.GET.status == 'monitoring' %}selected{% endif %}>Monitoring</option>
+            </select>
+        </div>
+        <div class="flex items-end gap-2">
+            <button type="submit" class="btn-secondary">Filter</button>
+            <button type="button"
+                    hx-boost="false"
+                    hx-get="{% url 'health_dashboard' %}?type=conditions"
+                    hx-target="#health-table-area"
+                    hx-swap="innerHTML"
+                    hx-push-url="true"
+                    class="btn-secondary">Clear</button>
+        </div>
+    </form>
+</div>
+
+<!-- Condition Table -->
+<div class="card overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Horse</th>
+                    <th>Condition</th>
+                    <th>Diagnosed</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in conditions %}
+                <tr>
+                    <td>
+                        <a href="{% url 'horse_detail' c.horse.pk %}" class="link">{{ c.horse.name }}</a>
+                    </td>
+                    <td>{{ c.name }}</td>
+                    <td class="text-slate-500">{{ c.diagnosed_date|default:"-" }}</td>
+                    <td>
+                        {% if c.status == 'active' %}
+                        <span class="badge-danger">Active</span>
+                        {% elif c.status == 'monitoring' %}
+                        <span class="badge-warning">Monitoring</span>
+                        {% else %}
+                        <span class="badge-success">Resolved</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'condition_update' c.pk %}" class="btn-ghost btn-xs">Edit</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">
+                        <div class="py-12 text-center">
+                            <p class="text-sm font-medium text-slate-500">No medical conditions recorded</p>
+                            <a href="{% url 'condition_create' %}" class="btn-primary mt-4 inline-flex">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                                </svg>
+                                Add your first condition
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'includes/htmx_pagination.html' %}
